@@ -1,0 +1,37 @@
+1. What is the probability that the total weight of 8 people exceeds 650kg?
+
+```{r}
+val1 <- pnorm(650, 560, 57)
+1 - val1
+```
+
+ 2. What is the probability that the total weight of 9 people exceeds 650kg?
+
+```{r}
+val <- pnorm(650, 630, 61)
+1 - val
+```
+
+ 3. What is the central region that contains 80% of distribution of the total
+ weight of 8 people?
+```{r}
+val11 <- qnorm(0.1, 560, 57)
+val11
+
+val22 <- qnorm(0.9, 560, 57)
+val22
+```
+
+# The requested region is the interval [486.9516, 633.0484].
+
+
+ ```{r}
+v1 <- qnorm(0.1, 630, 61)
+v1
+
+v2 <- qnorm(0.9, 630, 61)
+v2
+```
+
+# The requested region is the interval [ 551.8254,708.1746 ].
+
