@@ -1,0 +1,242 @@
+#Question 10.1.
+
+In Subsection 10.3.2 we compare the average against the mid
+range as estimators of the expectation of the measurement. The goal of this
+ exercise is to repeat the analysis, but this time compare the average to the
+ median as estimators of the expectation in symmetric distributions.
+
+ 1. Simulate the sampling distribution of average and the median of a sample
+ of size n = 100 from the Normal(32) distribution. Compute the expec
+tation and the variance of the sample average and of the sample median.
+ Which of the two estimators has a smaller mean square error?
+ 
+ ```{r}
+mu <- 3
+sig <- sqrt(2)
+X.bar <- rep(0, 10^5)
+X.med <- rep(0, 10^5)
+
+for (i in 1:10^5) {
+  X <- rnorm(100, mu, sig)
+  X.bar[i] <- mean(X)
+  X.med[i] <- median(X)
+}
+
+mean(X.bar) # 3.000010
+mean(X.med) # 3.000086
+var(X.bar) # 0.0201
+var(X.med) # 0.0312
+```
+Both estimators are unbiased: their averages ≈ 3
+But sample mean has smaller variance
+
+The sample mean has a smaller MSE, so it is better than the median for estimating the mean of a Normal distribution.
+
+
+ 2. Simulate the sampling distribution of average and the median of a sample
+ of size n = 100 from the Uniform(0555) distribution. Compute the
+ expectation and the variance of the sample average and of the sample
+ median. Which of the two estimators has a smaller mean square error?
+
+ ```{r}
+X.bar <- rep(0, 10^5)
+X.med <- rep(0, 10^5)
+
+for (i in 1:10^5) {
+  X <- runif(100, min = 0.5, max = 5.5)
+  X.bar[i] <- mean(X)
+  X.med[i] <- median(X)
+}
+
+mean(X.bar) # 3.000941
+mean(X.med) # 3.001162
+var(X.bar) # 0.0209
+var(X.med) # 0.0607
+ ```
+ 
+Again, both estimators are unbiased but the sample mean has a much smaller variance.
+The sample mean is again better than the median for estimating the mean in a Uniform distribution too.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Question 10.2.
+ 
+The goal in this exercise is to assess estimation of a proportion
+ in a population on the basis of the proportion in the sample.
+ The file pop2.csv was introduced in Exercise 7.1 of Chapter 7. This file
+ contains information associated to the blood pressure of an imaginary popu
+lation of size 100,000. The file can be found on the internet (http://pluto.
+ huji.ac.il/~msby/StatThink/Datasets/pop2.csv). One of the variables in
+ the file is a factor by the name group that identi es levels of blood pressure.
+ The levels of this variable are HIGH , LOW , and NORMAL .
+ The file ex2.csv contains a sample of size n = 150 taken from the given
+ population. This le can also be found on the internet (http://pluto.huji.
+ ac.il/~msby/StatThink/Datasets/ex2.csv). It contains the same variables
+ as in the file pop2.csv . The file ex2.csv corresponds in this exercise to
+ the observed sample and the file pop2.csv corresponds to the unobserved
+ population.
+ Download both files to your computer and answer the following questions:
+
+ 1. Compute the proportion in the sample of those with a high level of blood
+ pressure16.
+
+ ```{r}
+ex2 <- read.csv("C:/Users/ds3/Documents/coursework/week2/ex2.csv")
+mean(ex2$group == "HIGH")
+ ```
+ Sample proportion = 0.2467
+
+ 
+ 2. Compute the proportion in the population of those with a high level of
+blood pressure.
+```{r}
+pop2 <- read.csv("C:/Users/ds3/Documents/coursework/week2/pop2.csv")
+mean(pop2$group == "HIGH")
+```
+ Population proportion = 0.2813
+
+
+ 3. Simulate the sampling distribution of the sample proportion and compute
+ its expectation.
+```{r}
+P.hat <- rep(0, 10^5)
+for (i in 1:10^5) {
+  X <- sample(pop2$group, 150)
+  P.hat[i] <- mean(X == "HIGH")
+}
+mean(P.hat)
+```
+ Expected value of sample proportion = 0.2812
+ Close to true population proportion (0.2813) → estimator is unbiased.
+
+
+4. Compute the variance of the sample proportion.
+
+```{r}
+var(P.hat)
+```
+ Sample variance ≈ 0.00135
+ 
+ 
+ 5. It is proposed in Section 10.5 that the variance of the sample proportion
+ is Var(P) = p(1 -p)/ n, where p is the probability of the event (having a
+ high blood pressure in our case) and n is the sample size (n = 150 in our
+ case). Examine this proposal in the current setting.
+
+ ```{r}
+p <- mean(pop2$group == "HIGH")
+p * (1 - p) / 150
+ ```
+Theoretical variance ≈ 0.00135, which matches the simulation.
+
+
+---------------------------------------------------------------------------------------------
+
+
+#Question 9.1.
+ 
+  The data for the 50 patients is stored in file magnets.csv .
+ The file can be found on the internet at http://pluto.huji.ac.il/~msby/
+ StatThink/Datasets/magnets.csv. Download this file to your computer and
+ store it in the working directory of R. Read the content of the file into an R data
+ frame. Produce a summary of the content of the data frame and answer the
+ following questions:
+
+
+ 1. What is the sample average of the change in score between the patients
+ rating before the application of the device and the rating after the appli
+cation?
+
+```{r}
+magnets <- read.csv("C:/Users/ds3/Documents/coursework/week2/magnets.csv")
+summary(magnets)
+````
+
+ 2. Is the variable active a factor or a numeric variable?
+
+```{r}
+str(magnets$active)
+````
+# The variable active is a factor.
+
+ 3. Compute the average value of the variable change for the patients that
+ received and active magnet and average value for those that received an
+ inactive placebo. (Hint: Notice that the rst 29 patients received an active
+ magnet and the last 21 patients received an inactive placebo. The sub
+sequence of the rst 29 values of the given variables can be obtained via
+ the expression change[1:29] and the last 21 vales are obtained via the
+ expression change[30:50] .)
+
+```{r}
+mean(magnets$change[1:29])
+mean(magnets$change[30:50])
+```
+
+ 4. Compute the sample standard deviation of the variable change for the
+ patients that received and active magnet and the sample standard devia
+tion for those that received an inactive placebo.
+```{r}
+sd(magnets$change[1:29])
+sd(magnets$change[30:50])
+```
+
+ 5. Produce a boxplot of the variable change for the patients that received
+ and active magnet and for patients that received an inactive placebo.
+ What is the number of outliers in each subsequence?
+```{r}
+boxplot(magnets$change[1:29])
+# no outliers
+boxplot(magnets$change[30:50])
+# in the plot we can see that the values 3,4 and 5 are outliers
+
+table(magnets$change[30:50])
+# datawise, there are 4 outliers
+```
+
+
+Question9.2. 
+
+ 1.Assumethattheexpectationof themeasurement isequal to3.5, regardlessofwhatthetypeoftreatmentthatthepatientreceived.Wetakethe
+ standarddeviationofthemeasurementforpatientsthereceivesanactive
+ magnettobeequal to3andforthosethatreceivedtheinactiveplacebo
+ wetakeittobeequalto1.5.Assumethatthedistributionofthemeasure
+mentsisNormalandthereare29patientsinthe rstgroupand21inthe
+ second. Findtheinterval thatcontains95%of thesamplingdistribution
+ ofthestatistic.
+ 
+```{r}
+mu1 <- 3.5
+sig1 <- 3
+
+mu2 <- 3.5
+sig2 <- 1.5
+
+test.stat <- rep(0, 10^5)
+for (i in 1:10^5)
+{
+  X1 <- rnorm(29, mu1, sig1)
+  X2 <- rnorm(21, mu2, sig2)
+  X1.bar <- mean(X1)
+  X2.bar <- mean(X2)
+  X1.var <- var(X1)
+  X2.var <- var(X2)
+  test.stat[i] <- (X1.bar - X2.bar) / sqrt(X1.var / 29 + X2.var / 21)
+}
+
+quantile(test.stat, c(0.025, 0.975))
+```
+
+Does the observedvalue of the statistic, computed for thedata frame
+ magnets , falls inside or outside of the interval that iscomputed in 1?
+
+```{r}
+x1.bar <- mean(magnets$change[1:29])
+x2.bar <- mean(magnets$change[30:50])
+x1.var <- var(magnets$change[1:29])
+x2.var <- var(magnets$change[30:50])
+
+(x1.bar - x2.bar) / sqrt(x1.var / 29 + x2.var / 21)
+```
+
+#The value is  5.985601 and it does not belong to the interval.

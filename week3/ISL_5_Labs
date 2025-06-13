@@ -1,0 +1,109 @@
+# 5.3.1 The Validation Set Approach
+
+library(ISLR2) # Load the dataset (Auto is in this package)
+set.seed(1) # Set seed for consistent results
+train <- sample(392, 196) # Randomly pick 196 out of 392 rows for training
+
+# trying to predict mpg (miles per gallon) based on horsepower, using just the 196 training observations.
+lm.fit <- lm(mpg ∼ horsepower, data = Auto, subset = train)
+
+# predict mpg for all 392 cars using your model — even the ones it didn’t see (test set):
+predict(lm.fit, Auto)
+
+# Attach the Auto dataset so we can refer to variables directly
+attach(Auto)
+
+#So you get the actual mpg (mpg) and subtract the predicted mpg from it — for only the test set:
+#e-train index below
+#selects only the observations that are not in the training set.
+(mpg - predict(lm.fit, Auto))[-train]
+
+# square the differences so the negatives don’t cancel out:
+(mpg - predict(lm.fit, Auto))[-train]^2
+
+# And finally, you take the average of those squared errors — that’s the mean squared error (MSE):
+mean((mpg - predict(lm.fit, Auto))[-train]^2)
+# Output: 23.27
+
+
+#Now you're like, "Okay, what if the relationship between horsepower and mpg isn't a straight line?"
+#So you try a curved line (quadratic):
+lm.fit2 <- lm(mpg ~ poly(horsepower, 2), data = Auto, subset = train)
+mean((mpg - predict(lm.fit2, Auto))[-train]^2)
+# Output: 18.72
+
+
+# And then a wavy curve (cubic):
+lm.fit3 <- lm(mpg ~ poly(horsepower, 3), data = Auto, subset = train)
+mean((mpg - predict(lm.fit3, Auto))[-train]^2)
+# Output: 18.79
+
+# Lower MSE = better predictions, Quadratic wins here
+# if you split the data differently (different random seed), the numbers might change a bit — because which cars go into training/test matters.
+
+
+set.seed(2)
+train <- sample(392, 196)
+lm.fit <- lm(mpg ~ horepower, subset = train)
+ # calculates the Mean Squared Error (MSE) on the validation/test set.
+ mean((mpg - predict(lm.fit, Auto))[-train]^2)
+
+lm.fit2 <- lm(mpg ~ poly(horsepower, 2), data = Auto, subset = train)
+mean((mpg - predict(lm.fit2, Auto))[-train]^2)
+
+lm.fit3<- lm(mpg~ poLY(horsepower. 3), data= Auto, subset= train)
+mean((mpg - predict(lm.fit3, Auto))[-train]^2)
+
+##In statistics, we prefer simpler models unless the more complex one gives a much better result.
+#In your case: cubic didn’t improve much → so quadratic is preferred.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# 5.3.2 Leave-One-Out Cross-Validation
+
+
+# Load the boot package (cv.glm() is in here)
+library(boot)
+
+# Fit a linear regression model using glm() // general linear model likelm 
+glm.fit <- glm(mpg ~ horsepower, data = Auto)
+coef(glm.fit)
+
+# of lm()
+lm.fit <- lm(mpg ~ horsepower, data = Auto)
+coef(lm.fit)
+
+# Both yeild identical linear regression models
+
+# We're using glm() instead of lm() because we want to use cv.glm() to do cross-validation, and cv.glm() likes glm() models.
+
+# Perform LOOCV on the fitted model
+cv.err <- cv.glm(Auto, glm.fit)
+
+# Look at the error results
+cv.err$delta
+
+cv.error <-rep(0, 10)
+for (i in 1:10) {
+glm.fit <-glm(mpg~ poly(horsepower, i), data = Auto)
+cv.error[i] <-cv.glm(Auto, glm.fit)$delta[1]
+}
+ cv.error
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#5.3.3 k-FoldCross-Validation
+set.seed(17)
+# This will store the cross-validation error for each polynomial model (from degree 1 to 10).
+cv.error.10 <- rep(0, 10)
+for (i in 1:10) {
+    glm.fit <- glm(mpg ~ poly(horsepower, i), data = Auto)
+    cv.error.10[i] <- cv.glm(Auto, glm.fit, K = 10)$delta[1]
+
+    # Uses 10-fold cross-validation to test how good that model is
+    # Gets the average test error (delta[1])
+    # Saves that number into your cv.error.10 vector at position i
+}
+
+cv.error.10
+
+#test error dropped a lot from degree 1 to 2, but didn’t improve much after that.
+#So the quadratic model is probably best.”

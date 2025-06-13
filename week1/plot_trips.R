@@ -29,7 +29,7 @@ labs(title = "Histogram of Trip Durations", x = "Trip Duration (minutes)", y = "
 
 
 # plot the distribution of trip times by rider type indicated using color and fill (compare a histogram vs. a density plot)
-ggplot(trips, aes(x = tripduration, color = usertype, fill = usertype)) +
+ggplot(trips, aes(x = tripduration, color = usertype, fill = usertype, alpha = 0.5)) +
   geom_histogram() +
   scale_x_log10(label = comma)
 labs(title = "Histogram of Trip Durations", x = "Trip Duration (minutes)", y = "Number of Trips")
@@ -59,18 +59,20 @@ trips %>%
   geom_histogram()
 
 # plot the ratio of male to female trips (on the y axis) by age (on the x axis)
-trips1 <- trips %>%
-  mutate(age = 2025 - birth_year)
-
-# Summarize count of males and females by age
-gender_counts <- trips %>%
-  filter(gender %in% c("Male", "Female")) %>%
-  group_by(age, gender) %>%
-  summarise(count = n(), .groups = "drop") %>%
-  tidyr::pivot_wider(names_from = gender, values_from = count) %>%
-  mutate(ratio = Male / Female)
 # hint: use the pivot_wider() function to reshape things to make it easier to compute this ratio
 # (you can skip this and come back to it tomorrow if we haven't covered pivot_wider() yet)
+
+ratio <- trips %>%
+  mutate(age = as.numeric(format(ymd, "%Y")) - as.numeric(birth_year)) %>%
+  group_by(age, gender) %>%
+  summarise(num_trips = n()) %>%
+  pivot_wider(names_from = gender, values_from = num_trips) %>%
+  mutate(male_to_female = Male / Female) %>%
+  ggplot(aes(age, male_to_female)) +
+  geom_point()
+ratio
+
+
 
 ########################################
 # plot weather data
@@ -84,17 +86,29 @@ ggplot(weather, aes(x = as.Date(ymd), y = tmin)) +
 # hint: try using the pivot_longer() function for this to reshape things before plotting
 # (you can skip this and come back to it tomorrow if we haven't covered reshaping data yet)
 
-########################################
+minmax <- weather %>%
+  pivot_longer(
+    cols = c(tmin, tmax),
+    names_to = "Temp_Type",
+    values_to = "Temperature"
+  )
+ggplot(minmax, aes(ymd, Temperature, color = Temp_Type)) +
+  geom_point() +
+  geom_smooth()
+
+
+#######################################
 # plot trip and weather data
 ########################################
-
+view(weather)
 # join trips and weather
 trips_with_weather <- inner_join(trips, weather, by = "ymd")
+
 
 # plot the number of trips as a function of the minimum temperature, where each point represents a day
 # you'll need to summarize the trips and join to the weather data to do this
 
-trips %>%
+trips_by_day <- trips %>%
   mutate(date = as.Date(starttime)) %>%
   group_by(date) %>%
   summarise(num_trips = n())
@@ -104,8 +118,11 @@ weather <- weather %>%
 
 trips_with_weather <- inner_join(trips_by_day, weather, by = "date")
 
+
 ggplot(trips_with_weather, aes(x = tmin, y = num_trips)) +
   geom_point()
+
+trips_with_weather <- inner_join(trips, weather, by = "ymd")
 
 # repeat this, splitting results by whether there was substantial precipitation or not
 # you'll need to decide what constitutes "substantial precipitation" and create a new T/F column to indicate this
@@ -120,7 +137,7 @@ trips_with_weather %>%
   count(date, sub_prcp, tmin) %>%
   ggplot(aes(x = tmin, y = n)) +
   geom_point() +
-  facet_wrap(~sub_prcp, labeller = as_labeller(c("TRUE" = "Substanrtial", "FALSE" = "Non-Substantial"))) +
+  facet_wrap(~sub_prcp) +
   xlab("min_temp") +
   ylab("num_trips")
 

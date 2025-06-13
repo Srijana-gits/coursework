@@ -1,0 +1,8 @@
+data <- read.table("C:/Users/ds3/Documents/coursework/week3/body.dat.txt", header = FALSE)
+
+View(data)
+
+
+
+
+

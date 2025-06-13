@@ -1,0 +1,64 @@
+library(tidyverse)
+library(tidyr)
+
+view(table4a)
+view(table4b)
+
+
+# Section 12.2.1, EX- 2
+
+# 2. for table2
+view(table2)
+t2_pivoted <- pivot_wider(table2, names_from = type, values_from = count)
+view(t2_pivoted)
+
+t2_pivoted_with_rate <- mutate(table2_pivoted, rate = (cases / population) * 10000)
+view(t2_pivoted_with_rate)
+
+
+# 2. for table4a and table4b
+
+t4a_pivoted <- pivot_longer(table4a, names_to = "Year", values_to = "Cases", -country)
+t4b_pivoted <- pivot_longer(table4b, names_to = "Year", values_to = "pop", -country)
+view(t4a_pivoted)
+view(t4b_pivoted)
+
+t_4_combined <- inner_join(t4a_pivoted, t4b_pivoted)
+view(t_4_combined)
+
+t_4_combined_mutated <- mutate(t_4_combined, rate = (Cases / pop) * 10000)
+view(t_4_combined_mutated)
+
+
+# Section 12.3.3, Ex-1
+stocks <- tibble(
+    year   = c(2015, 2015, 2016, 2016),
+    half  = c(1, 2, 1, 2),
+    return = c(1.88, 0.59, 0.92, 0.17)
+)
+
+view(stocks)
+
+stocks %>%
+    pivot_wider(names_from = year, values_from = return) %>%
+    pivot_longer(`2015`:`2016`, names_to = "year", values_to = "return")
+
+# pivot_wider() turns values like 2015 (a number) into column names, which are always stored as character.
+
+# When pivot_longer() pulls them back into a column, they stay as character, not numbers..
+
+
+# Section 12.3.3, Ex- 3
+
+people <- tribble(
+    ~name, ~names, ~values,
+    #-----------------|--------|------
+    "Phillip Woods", "age", 45,
+    "Phillip Woods", "height", 186,
+    "Phillip Woods", "age", 50,
+    "Jessica Cordero", "age", 37,
+    "Jessica Cordero", "height", 156
+)
+
+people_piovted <- pivot_wider(people, names_from = names, values_from = values)
+people_piovted

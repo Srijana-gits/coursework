@@ -22,8 +22,10 @@ theme_set(theme_bw())
 
 Read data from the `ratings.csv` file
 ```{r load-data}
-ratings <- read_csv('ratings.csv',
-                    col_names = c('user_id','movie_id','rating','timestamp'))
+ratings <- read_csv("week3/ratings.csv",
+  col_names = c("user_id", "movie_id", "rating", "timestamp")
+)
+head(ratings)
 ```
 
 Loaded `r format(object.size(ratings), units="Mb")` of ratings data, containing `r format(nrow(ratings), big.mark = ",")` ratings. Here's a preview:
@@ -35,6 +37,14 @@ head(ratings) %>% kable()
 
 ```{r dist-ratings}
 # plot the distribution of rating values https://speakerdeck.com/jhofman/modeling-social-data-lecture-2-introduction-to-counting?slide=26
+
+rating_values <- ggplot(ratings, aes(rating)) +
+  geom_bar() +
+  labs(
+    x = "Ratings",
+    y = "No of Ratings"
+  )
+rating_values
 ```
 
 ## Per-movie stats
@@ -42,16 +52,40 @@ head(ratings) %>% kable()
 ```{r aggregate-by-movie}
 # aggregate ratings by movie, computing mean rating and number of ratings
 # hint: use the n() function for easy counting within a group
+aggregate <- ratings %>%
+  group_by(movie_id) %>%
+  summarise(
+    mean_rating = mean(rating),
+    no_of_ratings = n()
+  )
+
+aggregate
 ```
 
 ```{r dist-movie-popularity}
 # plot distribution of movie popularity (= number of ratings the movie received)
 # hint: try scale_x_log10() for a logarithmic x axis
+
+ggplot(aggregate, aes(no_of_ratings)) +
+  geom_histogram() +
+  scale_x_log10() +
+  labs(
+    title = "Distribution of Movie Popularity",
+    x = "No of ratings",
+    y = "No of movies"
+  )
+
 ```
 
 ```{r dist-mean-ratings-by-movie}
 # plot distribution of mean ratings by movie https://speakerdeck.com/jhofman/modeling-social-data-lecture-2-introduction-to-counting?slide=28
 # hint: try geom_histogram and geom_density
+ggplot(aggregate, aes(mean_rating)) +
+  geom_density(fill = "black")
+
+ggplot(aggregate, aes(mean_rating)) +
+  geom_histogram() +
+  geom_density(fill = "black")
 ```
 
 ```{r cdf-movie-pop}
@@ -59,7 +93,24 @@ head(ratings) %>% kable()
 # hint: use dplyr's rank and arrange functions, and the base R sum and cumsum functions
 # store the result in a new data frame so you can use it in creating figure 2 from the paper below
 
-# plot the CDF of movie popularity
+cdf_df <- aggregate %>%
+  arrange(desc(no_of_ratings)) %>%
+  mutate(
+    rank = row_number(),
+    cum_ratings = cumsum(no_of_ratings),
+    cdf = cum_ratings / sum(no_of_ratings)
+  )
+cdf_df
+
+  ggplot(cdf_df, aes(x = rank, y = cdf)) +
+    geom_line() +
+    labs(
+      title = "CDF of Movie Popularity",
+      x = "Top-k Movies (Ranked by Popularity)",
+      y = "Cumulative Fraction of All Ratings"
+    ) +
+    theme_minimal()
+
 ```
 
 
@@ -67,11 +118,27 @@ head(ratings) %>% kable()
 
 ```{r aggregate-by-user}
 # aggregate ratings by user, computing mean and number of ratings
+per_user_stats <- ratings %>%
+  group_by(user_id) %>%
+  summarise(
+    mean_rating = mean(rating),
+    no_of_ratings = n()
+  )
+per_user_stats
+
 ```
 
 ```{r dist-user-activity}
 # plot distribution of user activity (= number of ratings the user made)
 # hint: try a log scale here
+ggplot(per_user_stats, aes(x = no_of_ratings)) +
+  geom_histogram(color = "white") +
+  scale_x_log10() +
+  labs(
+    title = "Distribution of User Activity",
+    x = "Number of Ratings (Log Scale)",
+    y = "Number of Users"
+  )
 ```
 
 # Anatomy of the long tail
@@ -91,4 +158,57 @@ head(ratings) %>% kable()
 # paper, produce one curve for the 100% user satisfaction level and
 # another for 90%---do not, however, bother implementing the null
 # model (shown in the dashed lines).
+
+```{r long-tail, message=FALSE, warning=FALSE}
+
+ranked_ratings <- ratings %>%
+  left_join(movie_popularity, by = "movie_id")
+
+ranked_ratings
+
+user_movie_ranks <- ranked_ratings %>%
+  group_by(user_id) %>%
+  summarise(ranks = list(rank), .groups = "drop")
+user_movie_ranks
+
+
+# Compute each user's satisfaction thresholds
+user_satisfaction <- user_movie_ranks %>%
+  mutate(
+    threshold_100 = sapply(ranks, max),
+    threshold_90 = sapply(ranks, function(x) quantile(x, probs = 0.9))
+  )
+
+# Define inventory sizes from 1 to max needed
+inventory_sizes <- 1:max(user_satisfaction$threshold_100)
+
+# Compute 100% and 90% satisfaction at each inventory size
+satisfaction_100 <- sapply(inventory_sizes, function(k) {
+  mean(user_satisfaction$threshold_100 <= k)
+})
+
+satisfaction_90 <- sapply(inventory_sizes, function(k) {
+  mean(user_satisfaction$threshold_90 <= k)
+})
+
+# Create data frame for plotting
+satisfaction_df <- tibble(
+  inventory_size = inventory_sizes,
+  satisfaction_100 = satisfaction_100,
+  satisfaction_90 = satisfaction_90
+)
+
+# Plot
+ggplot(satisfaction_df, aes(x = inventory_size)) +
+  geom_line(aes(y = satisfaction_100)) +
+  geom_line(aes(y = satisfaction_90)) +
+  labs(
+    title = "User Satisfaction vs Inventory Size",
+    x = "Inventory Size (Top-k Popular Movies)",
+    y = "Fraction of Users Satisfied"
+  ) +
+  theme_minimal()
+
+
+
 ```

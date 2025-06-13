@@ -1,0 +1,47 @@
+#Exercise 5.29
+
+(a) Describe the relationship between height and weight.
+There is a positive linear relationship between height and weight. As height increases, weight also tends to increase. The scatterplot shows that taller individuals generally weigh more.
+
+
+
+(b) Write the equation of the regression line. Interpret the slope and intercept in context.
+Regression Equation:
+
+Weight= −105.0113 + 1.0176 × Height
+
+Interpretation:
+
+Slope (1.0176): For every 1 cm increase in height, the weight increases by approximately 1.02 kg, on average.
+
+Intercept (-105.0113): When height is 0 cm, the predicted weight is -105.01 kg. This doesn't make practical sense (you can’t have 0 cm height), so it just serves as a mathematical anchor for the line, not a real-world estimate.
+
+
+
+(c) Do the data provide strong evidence that an increase in height is associated with an increase in weight?
+Hypotheses:
+
+Null hypothesis (H₀): β₁ = 0 (Height is not associated with weight)
+
+Alternative hypothesis (H₁): β₁ ≠ 0 (Height is associated with weight)
+
+From the table:
+
+p-value for height = 0.0000
+
+Since the p-value is extremely small (less than 0.05), we reject the null hypothesis.
+
+Conclusion: Yes, there is strong evidence that an increase in height is associated with an increase in weight.
+
+
+
+(d) The correlation coefficient for height and weight is 0.72. Calculate R² and interpret it in context.
+𝑅2= 0.72^2= 0.5184
+ About 51.84% of the variability in weight can be explained by height using the linear model. This means height is a moderately strong predictor of weight for these individuals.
+
+#Exercise 5.20
+
+On paper 
+
+
+
